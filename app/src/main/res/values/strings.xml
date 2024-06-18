@@ -1,3 +1,10 @@
 <resources>
     <string name="app_name">ConcurrentTranslator</string>
+    <string name="change_language">Seta para demostrar a língua de origem e destino</string>
+    <string name="to_language">Para</string>
+    <string name="input_text">Adicione seu texto a ser traduzido</string>
+    <string name="translate">Traduzir</string>
+    <string name="translated_text">Texto traduzido</string>
+    <string name="from_language">De</string>
+    <string name="subTitle">Traduza seus textos.</string>
 </resources>
