@@ -1,15 +1,22 @@
 package br.edu.ifsp.scl.concurrenttranslator.ui
 
+import android.content.ComponentName
 import android.content.Intent
+import android.content.ServiceConnection
 import android.os.Bundle
+import android.os.IBinder
+import android.util.Log
 import android.widget.ArrayAdapter
 import androidx.appcompat.app.AppCompatActivity
 import br.edu.ifsp.scl.concurrenttranslator.R
 import br.edu.ifsp.scl.concurrenttranslator.databinding.ActivityMainBinding
 import br.edu.ifsp.scl.concurrenttranslator.model.livedata.DeepTranslateLiveData
 import br.edu.ifsp.scl.concurrenttranslator.service.LanguagesService
+import br.edu.ifsp.scl.concurrenttranslator.service.TranslationService
 
 class MainActivity : AppCompatActivity() {
+
+    private val languageMap = mutableMapOf<String, String>()
 
     private val amb: ActivityMainBinding by lazy {
         ActivityMainBinding.inflate(layoutInflater)
@@ -17,6 +24,25 @@ class MainActivity : AppCompatActivity() {
 
     private val languagensServiceIntent by lazy {
         Intent(this, LanguagesService::class.java)
+    }
+    private var translationService: TranslationService? = null
+
+    private val translationServiceConnection = object: ServiceConnection {
+        override fun onServiceConnected(name: ComponentName?, service: IBinder?) {
+            translationService = (service as TranslationService.TranslationServiceBinder).getTranslationService()
+        }
+
+        override fun onServiceDisconnected(name: ComponentName?) {
+            translationService = null
+        }
+
+        override fun onBindingDied(name: ComponentName?) {
+            super.onBindingDied(name)
+        }
+
+        override fun onNullBinding(name: ComponentName?) {
+            super.onNullBinding(name)
+        }
     }
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -31,33 +57,47 @@ class MainActivity : AppCompatActivity() {
             fromLangMactv.apply {
                 setAdapter(languagensAdapter)
                 setOnItemClickListener { _, _, _, _ ->
-                    fromLanguage = text.toString()
+                    fromLanguage = languageMap[text.toString()] ?: ""
                 }
             }
             toLangMactv.apply {
                 setAdapter(languagensAdapter)
                 setOnItemClickListener { _, _, _, _ ->
-                    toLanguage = text.toString()
+                    toLanguage = languageMap[text.toString()] ?: ""
                 }
             }
 
-            translateBt.setOnClickListener{}
+            translateBt.setOnClickListener{
+                Log.v(this.javaClass.simpleName, "onCreate() - Translating text: ${inputTextEt.text} from $fromLanguage to $toLanguage")
+                translationService?.translate(inputTextEt.text.toString(), fromLanguage, toLanguage)
+            }
         }
 
-        DeepTranslateLiveData.languagesLiveData.observe(this){ languagens ->
-            println("TESTE" + languagens)
-            languagens.languages.forEach { println(it) }
+        DeepTranslateLiveData.languagesLiveData.observe(this) { languages ->
             languagensAdapter.clear()
-            languagensAdapter.addAll(languagens.languages.map { it.name })
+            languages.languages.forEach { language ->
+                languageMap[language.name] = language.language
+                languagensAdapter.add(language.name)
+            }
             languagensAdapter.getItem(0)?.also {
                 amb.fromLangMactv.setText(it, false)
-                println("TESTE" + it)
-                fromLanguage = it
+                fromLanguage = languageMap[it] ?: ""
             }
-            languagensAdapter.getItem(1)?.also {
+            languagensAdapter.getItem(10)?.also {
                 amb.toLangMactv.setText(it, false)
-                println("TESTE" + it)
-                toLanguage = it
+                toLanguage = languageMap[it] ?: ""
+            }
+        }
+
+        DeepTranslateLiveData.translationLiveData.observe(this){ translationResult ->
+            with(amb){
+                Log.v(this.javaClass.simpleName, "onCreate() - Translated text: $translationResult")
+                translationResult.data.translations.translatedText.also {
+                    outputTextTiet.setText(it, android.widget.TextView.BufferType.EDITABLE)
+                }
+
+                outputTextTiet.visibility = android.view.View.VISIBLE
+                outputTextTil.visibility = android.view.View.VISIBLE
             }
         }
 
@@ -67,5 +107,17 @@ class MainActivity : AppCompatActivity() {
     override fun onDestroy() {
         super.onDestroy()
         stopService(languagensServiceIntent)
+    }
+
+    override fun onStart() {
+        super.onStart()
+        Intent(this@MainActivity, TranslationService::class.java).also { intent ->
+            bindService(intent, translationServiceConnection, BIND_AUTO_CREATE)
+        }
+    }
+
+    override fun onStop() {
+        super.onStop()
+        unbindService(translationServiceConnection)
     }
 }

@@ -17,6 +17,9 @@
         <service android:name=".service.LanguagesService"
             android:enabled="true"
             android:exported="false"/>
+        <service android:name=".service.TranslationService"
+            android:enabled="true"
+            android:exported="false"/>
         <activity
             android:name=".ui.MainActivity"
             android:exported="true">
