@@ -11,8 +11,10 @@ import android.os.Message
 import android.util.Log
 import br.edu.ifsp.scl.concurrenttranslator.model.api.DeepTranslateApiClient
 import br.edu.ifsp.scl.concurrenttranslator.model.domain.TranslateRequest
+import br.edu.ifsp.scl.concurrenttranslator.model.domain.Translation
 import br.edu.ifsp.scl.concurrenttranslator.model.livedata.DeepTranslateLiveData
-import java.net.HttpURLConnection
+import retrofit2.Call
+import retrofit2.Response
 import java.net.HttpURLConnection.HTTP_OK
 
 class TranslationService: Service() {
@@ -27,20 +29,27 @@ class TranslationService: Service() {
     }
     private inner class TranslationServiceHandler(looper: Looper): Handler(looper) {
         override fun handleMessage(msg: Message) {
+            with(msg.data) {
+                var translationRequest = TranslateRequest(getString("text", "")!!, getString("source", "")!!, getString("target", "")!!)
+                Log.v(this.javaClass.simpleName, "handleMessage() - Translation request: $translationRequest")
+                DeepTranslateApiClient.service.getTranslation(translationRequest)
+                    .enqueue(object : retrofit2.Callback<Translation> {
+                        override fun onResponse(
+                            call: Call<Translation>,
+                            response: Response<Translation>
+                        ) {
+                            if (response.code() == HTTP_OK) {
+                                DeepTranslateLiveData.translationLiveData.postValue(response.body())
+                            } else {
+                                DeepTranslateLiveData.errorLiveData.postValue("Lamento, ocorreu um erro. Error: ${response.code()}")
+                            }
+                        }
 
-           with (msg.data){
-               var translationRequest = TranslateRequest(getString("text", "")!!, getString("source", "")!!, getString("target", "")!!)
-               Log.v(this.javaClass.simpleName, "handleMessage() - Translation request: $translationRequest")
-               DeepTranslateApiClient.service.getTranslation(translationRequest).execute().also { response ->
-                   if (response.code() == HTTP_OK) {
-                       Log.v(this.javaClass.simpleName, "handleMessage() - Translation result: ${response.body()}")
-                       response.body()?.let { translationResult ->
-                           DeepTranslateLiveData.translationLiveData.postValue(translationResult)
-                           Log.v(this.javaClass.simpleName, "handleMessage() - Translation result: ${translationResult}")
-                       }
-                   }
-               }
-           }
+                        override fun onFailure(call: Call<Translation>, t: Throwable) {
+                            DeepTranslateLiveData.errorLiveData.postValue("Ocorreu um erro. Tente novamente, por favor. Error: ${t.message}")
+                        }
+                    })
+            }
         }
     }
 

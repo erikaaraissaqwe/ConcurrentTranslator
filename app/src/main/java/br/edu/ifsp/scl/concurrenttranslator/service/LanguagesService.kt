@@ -9,7 +9,10 @@ import android.os.Looper
 import android.os.Message
 import android.util.Log
 import br.edu.ifsp.scl.concurrenttranslator.model.api.DeepTranslateApiClient
+import br.edu.ifsp.scl.concurrenttranslator.model.domain.Languages
 import br.edu.ifsp.scl.concurrenttranslator.model.livedata.DeepTranslateLiveData
+import retrofit2.Call
+import retrofit2.Response
 import java.net.HttpURLConnection
 import java.net.HttpURLConnection.HTTP_OK
 
@@ -19,16 +22,24 @@ class LanguagesService: Service() {
 
     private inner class LanguagesServiceHandler(looper: Looper): Handler(looper) {
         override fun handleMessage(msg: Message) {
-           DeepTranslateApiClient.service.getLanguages().execute().also {response ->
-                if (response.code() == HTTP_OK) {
-                    Log.d("API Request", "Successful request")
-                    response.body()?.also { languages ->
-                        DeepTranslateLiveData.languagesLiveData.postValue(languages)
+            DeepTranslateApiClient.service.getLanguages().enqueue(object : retrofit2.Callback<Languages> {
+                override fun onResponse(call: Call<Languages>, response: Response<Languages>) {
+                    if (response.code() == HTTP_OK) {
+                        Log.d("API Request", "Successful request")
+                        response.body()?.also { languages ->
+                            DeepTranslateLiveData.languagesLiveData.postValue(languages)
+                        }
+                    } else {
+                        Log.e("API Request", "Failed request with error code: ${response.code()}")
+                        DeepTranslateLiveData.errorLiveData.postValue("Houve um erro. Tente novamente.! Error: ${response.message()}")
                     }
-                }else{
-                    Log.e("API Request", "Failed request with error code: ${response.code()}")
                 }
-           }
+
+                override fun onFailure(call: Call<Languages>, t: Throwable) {
+                    Log.e("API Request", "Failed request with error: ${t.message}")
+                    DeepTranslateLiveData.errorLiveData.postValue("Lamento. Ocorreu um erro. Error: ${t.message}")
+                }
+            })
             stopSelf(msg.arg1)
         }
     }

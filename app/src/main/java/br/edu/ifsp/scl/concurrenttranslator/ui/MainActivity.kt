@@ -6,8 +6,11 @@ import android.content.ServiceConnection
 import android.os.Bundle
 import android.os.IBinder
 import android.util.Log
+import android.view.View
 import android.widget.ArrayAdapter
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import br.edu.ifsp.scl.concurrenttranslator.R
 import br.edu.ifsp.scl.concurrenttranslator.databinding.ActivityMainBinding
 import br.edu.ifsp.scl.concurrenttranslator.model.livedata.DeepTranslateLiveData
@@ -99,6 +102,26 @@ class MainActivity : AppCompatActivity() {
                 outputTextTiet.visibility = android.view.View.VISIBLE
                 outputTextTil.visibility = android.view.View.VISIBLE
             }
+        }
+
+        DeepTranslateLiveData.errorLiveData.observe(this) { errorMessage ->
+            Toast.makeText(this, errorMessage, Toast.LENGTH_LONG).show()
+        }
+
+        val swipeRefreshLayout = findViewById<SwipeRefreshLayout>(R.id.swipe_refresh_layout)
+
+        swipeRefreshLayout.setOnRefreshListener {
+            with(amb){
+                inputTextEt.text.clear()
+                outputTextTil.visibility = View.GONE
+                outputTextTiet.visibility = View.GONE
+                fromLangMactv.text.clear()
+                toLangMactv.text.clear()
+            }
+            stopService(languagensServiceIntent)
+            startService(languagensServiceIntent)
+
+            swipeRefreshLayout.isRefreshing = false
         }
 
         startService(languagensServiceIntent)
