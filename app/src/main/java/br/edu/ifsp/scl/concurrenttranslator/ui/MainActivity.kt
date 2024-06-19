@@ -71,6 +71,11 @@ class MainActivity : AppCompatActivity() {
             }
 
             translateBt.setOnClickListener{
+                amb.outputTextTil.visibility = View.GONE
+                if (inputTextEt.text.toString().isEmpty()) {
+                    Toast.makeText(this@MainActivity, "Insira um texto para traduzir.", Toast.LENGTH_SHORT).show()
+                    return@setOnClickListener
+                }
                 Log.v(this.javaClass.simpleName, "onCreate() - Translating text: ${inputTextEt.text} from $fromLanguage to $toLanguage")
                 translationService?.translate(inputTextEt.text.toString(), fromLanguage, toLanguage)
             }
