@@ -30,8 +30,7 @@ class TranslationService: Service() {
     private inner class TranslationServiceHandler(looper: Looper): Handler(looper) {
         override fun handleMessage(msg: Message) {
             with(msg.data) {
-                var translationRequest = TranslateRequest(getString("text", "")!!, getString("source", "")!!, getString("target", "")!!)
-                Log.v(this.javaClass.simpleName, "handleMessage() - Translation request: $translationRequest")
+                val translationRequest = TranslateRequest(getString("text", "")!!, getString("source", "")!!, getString("target", "")!!)
                 DeepTranslateApiClient.service.getTranslation(translationRequest)
                     .enqueue(object : retrofit2.Callback<Translation> {
                         override fun onResponse(
@@ -63,7 +62,6 @@ class TranslationService: Service() {
     }
 
     fun translate(text: String, source: String, target: String) {
-        Log.v(this.javaClass.simpleName, "translate() - Translating text: $text from $source to $target")
         HandlerThread(this.javaClass.name).apply {
             start()
             translationServiceHandler = TranslationServiceHandler(looper).apply {

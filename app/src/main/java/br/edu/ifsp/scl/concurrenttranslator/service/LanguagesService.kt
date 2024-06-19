@@ -13,7 +13,6 @@ import br.edu.ifsp.scl.concurrenttranslator.model.domain.Languages
 import br.edu.ifsp.scl.concurrenttranslator.model.livedata.DeepTranslateLiveData
 import retrofit2.Call
 import retrofit2.Response
-import java.net.HttpURLConnection
 import java.net.HttpURLConnection.HTTP_OK
 
 class LanguagesService: Service() {
@@ -25,18 +24,15 @@ class LanguagesService: Service() {
             DeepTranslateApiClient.service.getLanguages().enqueue(object : retrofit2.Callback<Languages> {
                 override fun onResponse(call: Call<Languages>, response: Response<Languages>) {
                     if (response.code() == HTTP_OK) {
-                        Log.d("API Request", "Successful request")
                         response.body()?.also { languages ->
                             DeepTranslateLiveData.languagesLiveData.postValue(languages)
                         }
                     } else {
-                        Log.e("API Request", "Failed request with error code: ${response.code()}")
                         DeepTranslateLiveData.errorLiveData.postValue("Houve um erro. Tente novamente.! Error: ${response.message()}")
                     }
                 }
 
                 override fun onFailure(call: Call<Languages>, t: Throwable) {
-                    Log.e("API Request", "Failed request with error: ${t.message}")
                     DeepTranslateLiveData.errorLiveData.postValue("Lamento. Ocorreu um erro. Error: ${t.message}")
                 }
             })

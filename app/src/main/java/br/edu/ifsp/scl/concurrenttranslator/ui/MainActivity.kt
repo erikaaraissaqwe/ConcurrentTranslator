@@ -104,8 +104,8 @@ class MainActivity : AppCompatActivity() {
                     outputTextTiet.setText(it, android.widget.TextView.BufferType.EDITABLE)
                 }
 
-                outputTextTiet.visibility = android.view.View.VISIBLE
-                outputTextTil.visibility = android.view.View.VISIBLE
+                outputTextTiet.visibility = View.VISIBLE
+                outputTextTil.visibility = View.VISIBLE
             }
         }
 

@@ -8,7 +8,7 @@ import java.util.concurrent.TimeUnit
 object DeepTranslateApiClient {
     private const val BASE_URL = "https://deep-translate1.p.rapidapi.com/"
 
-    val okHttpClient = OkHttpClient.Builder()
+    private val okHttpClient = OkHttpClient.Builder()
         .connectTimeout(1, TimeUnit.MINUTES)
         .readTimeout(30, TimeUnit.SECONDS)
         .writeTimeout(15, TimeUnit.SECONDS)
