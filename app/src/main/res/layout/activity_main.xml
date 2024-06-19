@@ -14,8 +14,6 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:subtitle="@string/subTitle"
-        app:title="@string/app_name"
         app:subtitleTextColor="@color/design_default_color_on_primary"
         app:titleTextColor="@color/design_default_color_on_primary" />
 
@@ -120,7 +118,7 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/translateBt"
         android:layout_marginTop="16dp"
-        android:visibility="visible">
+        android:visibility="gone">
 
         <com.google.android.material.textfield.TextInputEditText
             android:id="@+id/outputTextTiet"
